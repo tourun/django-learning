@@ -231,9 +231,7 @@ for app_config in self.app_configs.values():
     all_models = self.all_models[app_config.label]
     app_config.import_models(all_models)
 
-
 MODELS_MODULE_NAME = 'models'
-
 
 def import_models(self, all_models):
     self.models = all_models
@@ -244,6 +242,7 @@ def import_models(self, all_models):
 ```
 在module指定的目录或者package中，查找是否有定义models模块，并将其import进来。再回到execute方法中，如果python manage.py之后传递的是非help或者version这种帮助信息，那么会执行到语句：
 > self.fetch_command(subcommand).run_from_argv(self.argv)
+
 fetch_command方法内部先通过get_commands方法，从全局的apps对象中获取之前加载到的INSTALLED_APPS模块对应的management/commands包：
 ```python
 # django.core.management.__init__.py
