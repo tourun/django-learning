@@ -78,7 +78,7 @@ def execute(self):
     else:
         self.fetch_command(subcommand).run_from_argv(self.argv)
 ```
-我们来分解一下这段程序，subcommnad是python manage.py后的参数，即子程序名，argv[0]表示manage.py。这里如果没有指定，那么子程序默认为help。接着通过CommandParser来解析随后的参数，app子程序名之后的参数，这里我们默认没有其他参数。接着在try语句中执行 settings.INSTALLED_APPS，这句乍看上去很是不解，没有赋值，没有输出，注意settings是django.conf.__init__.py中定义的一个LazySettings对象，**LazySettings继承自LazyObject类，它重写了__getattr__和__setattr__方法，那么在调用settings.INSTALLED_APPS时，会通过其自定义的__getattr__方法实现**：
+我们来分解一下这段程序，subcommnad是python manage.py后的参数，即子程序名，argv[0]表示manage.py。这里如果没有指定，那么子程序默认为help。接着通过CommandParser来解析随后的参数，app子程序名之后的参数，这里我们默认没有其他参数。接着在try语句中执行 settings.INSTALLED_APPS，这句乍看上去很是不解，没有赋值，没有输出，注意settings是django.conf.\__init\__.py中定义的一个LazySettings对象，**LazySettings继承自LazyObject类，它重写了__getattr__和__setattr__方法，那么在调用settings.INSTALLED_APPS时，会通过其自定义的__getattr__方法实现**：
 ```python
 settings = LazySettings()
 
@@ -225,7 +225,7 @@ class Apps(object):
             
     # other functions ...
 ```
-在for循环中，使用AppConfig.create(entry) 加载installed_apps里面的各模块，并保存在app_cofigs中，**注意create方法是AppConfig类的classmethod**，用以实现工厂模式，它根据installed_apps中的模块构造出 AppConfig(app_name, app_module) 这样的实例，其中app_name表示INSTALLED_APPS中指定的应用字符串，app_module表示根据app_name加载到的module。当加载的模块中有定义default_app_config时，那么会构造其表示的类对象，例如我们在django项目中会用到的用户认证鉴权模块，在INSTALLED_APPS中配置为'django.contrib.auth'，当在import_module此模块时，实际django.contrib.auth是一个python的package，在__init__.py文件中有定义了default_app_config = 'django.contrib.auth.apps.AuthConfig'，那么最终会构造apps.py中定义的AuthConfig类实例，这些default_app_config对应的类同样继承自AppConfig。在AppConfig实例的初始化方法中，会记录这些应用的标签、文件路径等信息，最终将这些实例会保存在其属性app_configs中。接着每个AppConfig实例会加载其指定模块的models，all_models定义为all_models = defaultdict(OrderedDict)，**defaultdict会创建表示一个类似dict的实例，在构造时可以指定字典中元素值的默认类型，这里用OrderedDict来指定其默认的类型，OrderedDict是dict的子类，它可以记录元素添加到字典中的顺序，保证元素有序，因此在获取all_models中的元素时，当key不存在时，会创建一个OrderedDict对象**，我们来看下models是如何加载的：
+在for循环中，使用AppConfig.create(entry) 加载installed_apps里面的各模块，并保存在app_cofigs中，**注意create方法是AppConfig类的classmethod**，用以实现工厂模式，它根据installed_apps中的模块构造出 AppConfig(app_name, app_module) 这样的实例，其中app_name表示INSTALLED_APPS中指定的应用字符串，app_module表示根据app_name加载到的module。当加载的模块中有定义default_app_config时，那么会构造其表示的类对象，例如我们在django项目中会用到的用户认证鉴权模块，在INSTALLED_APPS中配置为'django.contrib.auth'，当在import_module此模块时，实际django.contrib.auth是一个python的package，在\__init\__.py文件中有定义了default_app_config = 'django.contrib.auth.apps.AuthConfig'，那么最终会构造apps.py中定义的AuthConfig类实例，这些default_app_config对应的类同样继承自AppConfig。在AppConfig实例的初始化方法中，会记录这些应用的标签、文件路径等信息，最终将这些实例会保存在其属性app_configs中。接着每个AppConfig实例会加载其指定模块的models，all_models定义为all_models = defaultdict(OrderedDict)，**defaultdict会创建表示一个类似dict的实例，在构造时可以指定字典中元素值的默认类型，这里用OrderedDict来指定其默认的类型，OrderedDict是dict的子类，它可以记录元素添加到字典中的顺序，保证元素有序，因此在获取all_models中的元素时，当key不存在时，会创建一个OrderedDict对象**，我们来看下models是如何加载的：
 ```python
 for app_config in self.app_configs.values():
     all_models = self.all_models[app_config.label]
@@ -281,7 +281,7 @@ class ManagementUtility(object):
         
     # other functions ...
 ```
-**注意方法定义在django.core.management._init_.py文件中，get_commands方法中的__path__[0]是其__init__.py的绝对路径**，这里通过find_commands首先将django.core.management.commands目录下的模块引入进来，像我们常用的一些基础模块（通过python manage.py进行调用）比如startpp、migrate、compilemessages、runserver、shell等都在此目录下。加载完这些基础模块之后，接着加载apps中的自定义的commands模块，即INSTALLED_APPS对应的各个模块。再根据subcommand从中这些包中获取到对应的Command，返回Command类对象。django后台服务中的Command继承自BaseCommand，并且实现了各自业务的handle方法。  
+**注意方法定义在django.core.management.\__init\__.py文件中，get_commands方法中的__path__[0]是其\__init\__.py的绝对路径**，这里通过find_commands首先将django.core.management.commands目录下的模块引入进来，像我们常用的一些基础模块（通过python manage.py进行调用）比如startpp、migrate、compilemessages、runserver、shell等都在此目录下。加载完这些基础模块之后，接着加载apps中的自定义的commands模块，即INSTALLED_APPS对应的各个模块。再根据subcommand从中这些包中获取到对应的Command，返回Command类对象。django后台服务中的Command继承自BaseCommand，并且实现了各自业务的handle方法。  
 接着，通过返回的对象调用其run_from_argv方法，从名称可以看出，这个方法是通过命令行参数，进行函数调用的：
 ```python
 def run_from_argv(self, argv):
