@@ -150,7 +150,8 @@ def run(addr, port, wsgi_handler, ipv6=False, threading=False):
 ipv6和threading参数通过启动命名传递过来，如果没有指定，那么ipv6为False，threading为True（表示以多线程方式运行）。函数中通过set_app，将application对象设置为httpd实例的属性，最终以httpd.serve_forever()方式运行，这里以多线程方式运行，所以httpd在这里表示WSGIServer类实例，这个类通过type动态生成，它继承自socketserver.ThreadingMixIn和WSGIServer类。**这里ThreadingMixIn类的定义使用了Mixin技术**：
 > Mixin编程是一种开发模式，是一种将多个类中的功能单元的进行组合的利用的方式,通常mixin并不作为任何类的基类，也不关心与什么类一起使用，而是在运行时动态的同其他零散的类一起组合使用。使用mixin机制有如下好处：可以在不修改任何源代码的情况下，对已有类进行扩展；可以保证组件的划分；可以根据需要，使用已有的功能进行组合，来实现“新”类；很好的避免了类继承的局限性，因为新的业务需要可能就需要创建新的子类。
 
-对于mixin的使用场景，摘自[stackoverflow](http://stackoverflow.com/questions/533631/what-is-a-mixin-and-why-are-they-useful)上的高票回答：  There are two main situations where mixins are used:
+对于mixin的使用场景，摘自[stackoverflow](http://stackoverflow.com/questions/533631/what-is-a-mixin-and-why-are-they-useful)上的高票回答：
+There are two main situations where mixins are used:
 - You want to provide a lot of optional features for a class.
 - You want to use one particular feature in a lot of different classes.
 
@@ -227,29 +228,29 @@ class WSGIServer(simple_server.WSGIServer, object):
 ```
 用一个简单的图来进行示例其继承关系如下：
 ```python
-                    +------------+
+                    ++++++++++++++
                     | BaseServer |
-                    +------------+
+                    ++++++++++++++
                           |
                           v
-                    +-----------+
+                    +++++++++++++
                     | TCPServer |
-                    +-----------+
+                    +++++++++++++
                           |
                           v
-                    +-----------+
+                    +++++++++++++
                     |HTTPServer |
-                    +-----------+
+                    +++++++++++++
                           |
                           v
-+--------------+    +------------+
+++++++++++++++++    ++++++++++++++
 |ThreadingMixIn| +  | WSGIServer |
-+--------------+    +------------+
+++++++++++++++++    ++++++++++++++
                  |
                  v
-           +-----------+
+           +++++++++++++
            | httpd_cls |
-           +-----------+
+           +++++++++++++
 ```
 从代码可以看出底层实际通过TCP连接来处理请求，在新建httpd_cls类实例时，会调用其父类的__init__进行初始化，依次设置信号量，创建TCP套接字，绑定地址与端口，进行监听。
 ```python
